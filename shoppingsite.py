@@ -66,27 +66,31 @@ def add_to_cart(melon_id):
 
     # TODO: Finish shopping cart functionality
         
-    #see if particular melon ID is already a key in our dictionary
-    #lines 72-74 can be condensed into one line using get()
+    ##see if particular melon ID is already a key in our dictionary
+    ##lines 72-74 can be condensed into one line using get()
+
+    # if 'cart' in session:
+    #     if melon_id in session['cart']:
+    #         melons.get_by_id(melon_id).quantity += 1
+    
+    ##     #session['cart'].get(melon_id) += 1  ->attempt at condensing, syntax err
+    ##     #cart['melon id'] = cart.get(melon_id, 0) + 1
+
+    #     elif melon_id not in session['cart']:
+    #         melons.get_by_id(melon_id).quantity = 1
+    # elif 'cart' not in session:
+    #     session['cart'] = {}
 
     if 'cart' in session:
-        if melon_id in session['cart']:
-            melons.get_by_id(melon_id).quantity += 1
+        cart = session['cart']
+    else:
+        cart = session['cart'] = {}
 
-        #session['cart'].get(melon_id) += 1  ->attempt at condensing, syntax err
-
-        elif melon_id not in session['cart']:
-            melons.get_by_id(melon_id).quantity = 1
-    elif 'cart' not in session:
-        session['cart'] = {}
-        session['cart'][melon_id] = 1
-        
+    cart[melon_id] = cart.get(melon_id, 0) + 1        
     session.modified = True
-    
+
     flash(f'Thanks for adding an item to the cart!')
     
-
-
     return redirect('/cart')
 
     # The logic here should be something like:
@@ -106,21 +110,20 @@ def show_shopping_cart():
     # TODO: Display the contents of the shopping cart.
 
     melon_list = []
-    total = 0
-
-    #loop over the cart dictionary
+    order_total = 0
     
+    cart = session.get('cart', {})
 
-    print("*" * 50)
-    print(session.keys())
-    print(session['cart'])
-
-    for melon_id in session['cart']:
-        print(melon_id)
+    for melon_id, quantity in cart.items():
         melon_object = melons.get_by_id(melon_id)
-    
-    # print(melon_list)
-     ##For each melon id in the cart dictionary, retrieve the corresponding Melon object using the same get_by_id function you used in the route for the melon details page.
+
+        total_cost = quantity * melon_object.price
+        order_total += total_cost
+
+        melon_object.quantity = quantity
+        melon_object.total_cost = total_cost 
+
+        melon_list.append(melon_object)
 
 
     # The logic here will be something like:
@@ -139,7 +142,9 @@ def show_shopping_cart():
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
 
-    return render_template("cart.html")
+    return render_template("cart.html",
+                            cart=melon_list,
+                            order_total=order_total)
 
 
 @app.route("/login", methods=["GET"])
